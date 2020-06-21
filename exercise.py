@@ -3,6 +3,8 @@ import matplotlib.pyplot as plt
 from sklearn import datasets
 import sympy
 
+plt.rcParams['font.sans-serif'] = ['Microsoft YaHei']
+
 
 def sigmoid(sig_val):
     return 1 / (1 + np.exp(-1 * sig_val))
@@ -73,6 +75,16 @@ class GradientDescent(object):
 
         return init_weight_vector, loss_val_list, self.epochs
 
+    def compute_val_for_soft(self, init_weight_matrix, partial_val_function):
+        epoch = 0
+        loss_val_list = []
+        while epoch < self.epochs:
+            partial_val, loss_val = partial_val_function(init_weight_matrix, epoch, True)
+            init_weight_matrix = init_weight_matrix - self.alpha * partial_val
+            loss_val_list.append(loss_val)
+            epoch += 1
+        return init_weight_matrix, loss_val_list, self.epochs
+
 
 class LogisticRegression(object):
     def __init__(self, data, data_label):
@@ -108,15 +120,9 @@ class LogisticRegression(object):
         loss_val = 0
         if is_print_loss:
             loss_val = self.get_loss_val(sigmoid_val, self.y)
-            print('-------iterations = ' + str(iterations) + 'partial_val = ' + str(loss_val))
+            print('-------iterations = ' + str(iterations) + 'loss_val = ' + str(loss_val))
         partial_val = -1 / self.m * self.data.T * (self.y - sigmoid_val)
         return partial_val, loss_val
-
-    def bias_loss_fun(self):
-        b_loss = -1 / self.m * np.sum(
-            [self.y[i] - sigmoid(self.data[i] * self.w + self.b) for i in range(self.m)]
-        )
-        return b_loss
 
     def get_loss_val(self, sigmoid_val, label):
         """
@@ -131,6 +137,10 @@ class LogisticRegression(object):
         return loss / self.m
 
     def update_weight(self):
+        """
+        通过梯度下降更新权重
+        :return: 最新权重值
+        """
         init_weight_vector = self.w
         gd = GradientDescent(alpha=0.1)
         new_weight_vector, self.loss_val_list, self.epochs = \
@@ -138,22 +148,121 @@ class LogisticRegression(object):
         return new_weight_vector
 
     def display_loss_plot(self):
+        """
+        显示损失函数变化图
+        :return:
+        """
         if self.loss_val_list and self.epochs == len(self.loss_val_list):
+            plt.title('损失函数变化图')
+            plt.xlabel('迭代次数')
+            plt.ylabel('损失值')
             plt.plot(range(self.epochs), self.loss_val_list)
             plt.show()
 
 
-iris = datasets.load_iris()
+class SoftMaxRegression(object):
+    def __init__(self, data, label):
+        """
+        m: 数据行数
+        k: 类别数
+        w: 初始权重（mxk矩阵）
+        y: 标签（kx1矩阵）
+        :param data: 输入数据
+        :param label: 标签类别
+        """
+        self.m, self.n = np.shape(data)
+        self.data = data
+        self.y = label
+        self.k = len(set(self.y.flatten().tolist()[0]))
+        self.w = np.mat(np.ones((self.n, self.k)))
+        self.loss_val_list = []
+        self.epochs = 0
 
+    def indicator_func(self, label_matrix):
+        """
+        分类矩阵，行：样本，列：类别
+        [[0, 1],
+         [1, 0],
+         [1, 0],
+            ]
+        :param label_matrix:
+        :return:
+        """
+        init_label = np.mat(np.zeros((self.m, self.k)))
+        for j in range(self.m):
+            init_label[j, label_matrix[j, 0]] = 1
+        return init_label
+
+    def get_loss_func(self, new_weight):
+        """
+        获取损失值
+        :param new_weight:
+        :return:
+        """
+        loss = 0
+        for i in range(self.m):
+            e_theta_w = np.sum(self.data[i] * new_weight[:, self.y[i, 0]])
+            all_e_theta_w = np.sum([self.data[i] * new_weight[:, l] for l in range(self.k)])
+            loss += -1 / self.m * np.log(e_theta_w / all_e_theta_w)
+        return loss
+
+    def loss_func_partial(self, new_weight, iterations, is_print_loss=False):
+        """
+        损失函数怕偏导值
+        :param new_weight:
+        :param iterations:
+        :param is_print_loss:
+        :return:
+        """
+        loss_val = self.get_loss_func(new_weight)
+        if is_print_loss:
+            print("------iterations = " + str(iterations) + ',loss_val = ' + str(loss_val))
+        new_weight_vector = -1 / self.m * self.data.T * \
+                            (self.indicator_func(self.y) - np.exp(self.data * new_weight) / np.exp(
+                                self.data * new_weight).sum(axis=1).repeat(self.k, axis=1))
+        return new_weight_vector, loss_val
+
+    def update_weight(self):
+        """
+        更新权重
+        :return:
+        """
+        init_weight_matrix = self.w
+        gd = GradientDescent()
+        new_weight_matrix, self.loss_val_list, self.epochs = \
+            gd.compute_val_for_soft(init_weight_matrix, self.loss_func_partial)
+        return new_weight_matrix
+
+    def display_loss_plot(self):
+        """
+        SoftMax显示损失函数变化图
+        :return:
+        """
+        if self.loss_val_list and self.epochs == len(self.loss_val_list):
+            plt.title('损失函数变化图')
+            plt.xlabel('迭代次数')
+            plt.ylabel('损失值')
+            plt.plot(range(self.epochs), self.loss_val_list)
+            plt.show()
+
+
+# iris = datasets.load_iris()
+#
 test_data = np.mat([[1, 2, 1],
                     [3, 3, 1],
                     [1, 4, 1],
                     [2, 4, 1]])
 
 test_data_label = np.mat([1, 1, 0, 0]).T
-lr = LogisticRegression(test_data, test_data_label)
-print(lr.update_weight())
-lr.display_loss_plot()
+# lr = LogisticRegression(test_data, test_data_label)
+# print(lr.update_weight())
+# lr.display_loss_plot()
+
+sm = SoftMaxRegression(test_data, test_data_label)
+new_w = sm.update_weight()
+print(new_w)
+sm.display_loss_plot()
+# print(sm.update_weight())
 # epoch = 0
 # init_vec = lr.w
 # loss_val_list = []
@@ -180,7 +289,3 @@ lr.display_loss_plot()
 #     if init_b[0] < 1e-3 or init_b[1] < 1e-3:
 #         break
 #     epoch += 1
-
-
-
-
