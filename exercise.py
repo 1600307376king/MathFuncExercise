@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn import datasets
 import sympy
+from sklearn.model_selection import train_test_split
 
 plt.rcParams['font.sans-serif'] = ['Microsoft YaHei']
 
@@ -216,7 +217,8 @@ class SoftMaxRegression(object):
         """
         loss_val = self.get_loss_func(new_weight)
         if is_print_loss:
-            print("------iterations = " + str(iterations) + ',loss_val = ' + str(loss_val))
+            if iterations % 100 == 0:
+                print("------iterations = " + str(iterations) + ',loss_val = ' + str(loss_val))
         new_weight_vector = -1 / self.m * self.data.T * \
                             (self.indicator_func(self.y) - np.exp(self.data * new_weight) / np.exp(
                                 self.data * new_weight).sum(axis=1).repeat(self.k, axis=1))
@@ -245,23 +247,37 @@ class SoftMaxRegression(object):
             plt.plot(range(self.epochs), self.loss_val_list)
             plt.show()
 
+    @staticmethod
+    def test_data_predict(last_weight, test_data, test_label):
+        test_data_length = len(test_data)
+        err_count_number = 0
+        for row in range(test_data_length):
+            if test_label[row] - (test_data * last_weight).argmax(axis=1)[row] > 0:
+                err_count_number += 1
+        accuracy = 1 - (err_count_number / test_data_length)
+        print("test data predict accuracy is {0} %".format(accuracy * 100))
 
-# iris = datasets.load_iris()
+
+iris = datasets.load_iris()
+
+# test_data = np.mat([[1, 2, 1],
+#                     [3, 3, 1],
+#                     [1, 4, 1],
+#                     [2, 4, 1]])
 #
-test_data = np.mat([[1, 2, 1],
-                    [3, 3, 1],
-                    [1, 4, 1],
-                    [2, 4, 1]])
+# test_data_label = np.mat([1, 1, 0, 0]).T
 
-test_data_label = np.mat([1, 1, 0, 0]).T
+train_x, test_x, train_y, test_y = train_test_split(iris.data, iris.target, test_size=0.2, random_state=42)
 # lr = LogisticRegression(test_data, test_data_label)
 # print(lr.update_weight())
 # lr.display_loss_plot()
 
-sm = SoftMaxRegression(test_data, test_data_label)
+sm = SoftMaxRegression(train_x, np.mat([train_y]).T)
 new_w = sm.update_weight()
 print(new_w)
 sm.display_loss_plot()
+sm.test_data_predict(new_w, test_x, np.mat([test_y]).T)
+
 # print(sm.update_weight())
 # epoch = 0
 # init_vec = lr.w
