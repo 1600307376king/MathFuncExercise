@@ -15,7 +15,6 @@
    A_(m,n)B_(n,p) = C_(m,p)
    $$
    
-
 2. pass
 
 
@@ -24,7 +23,7 @@
 
 ## 第一章、梯度下降算法
 
-#### 			梯度下降法时一种深度学习优化算法
+#### 			一、梯度下降法时一种深度学习优化算法
 
 1. 公式表述：
 
@@ -68,45 +67,49 @@ $$
 
 ## 第二章、反向传播算法数学推导
 
-#### 多元函数表达式
+#### 一、向前传播
 
-1. 输入层 a代表单个神经元编号，n代表输入神经元个数
+1. 两层隐藏层网络向前传播计算图
+
+![ai_bp_net_graph](C:\Users\jjc\PycharmProjects\MathFuncExercise\math_md_src\ai_bp_net_graph.png)
+
+#### 一、单层隐藏层反向传播数学公式推导
+
+
+
+1. w<sup>a</sup>表示是输入层与隐藏层a的权重矩阵
    $$
-   f(x) = w*x  + b
+   f(x) = w^a*x  + b
    $$
+
+2. 输入数据x作为隐藏层的输入，得到***h<sub>output</sub>(x)***
+   $$
+   y=h_{output}(x) = Sigmod(f(x))
+   $$
+
    
 
-2. 输入层计算输出值 fo(x)作为隐藏层的输入
+3. 将隐藏层的输出 ***y*** 作为参数，计算误差值，*注：**n**为标签个数，最后一层隐藏层的神经元个数等于标签个数*
    $$
-   f_o(x) = sigmod(f(x))
+   E = \frac{1}{2}\sum_{i=1}^n(y - p_i)^2
    $$
-   
 
-3. 计算隐藏层输出
+4. 对误差***E***公式关于***w<sup>a</sup><sub>ij</sub>***进行求偏导，注：第三行***w<sup>a</sup>***矩阵与***x***矩阵相乘展开式为第四行，由于是关于***w<sup>a</sup><sub>ij</sub>***求偏导所以其他项视作常数，求导得0，即展开式求偏导得到***x<sub>j</sub>***
    $$
-   h_o(x) = sigmod(w*f_o(x)+b)
-   $$
+   \begin{aligned}
+   \frac{\partial E}{\partial w^a_{ij}} &= \sum_{i=1}^n(y - p_i)\frac{\partial y}{\partial w^a_{ij}} 
+   \\&= \sum_{i=1}^n(y - p_i) y (1 - y)\frac{\partial f(x)}{\partial w^a_{ij}} 
+   \\&= \sum_{i=1}^n(y - p_i) y (1 - y)(w^ax+b_a)
+   \\&= \sum_{i=1}^n(y - p_i) y (1 - y)(w^a_{11}x_1 + w^a_{12}x_2...+w^a_{ij}x_j + b_a)
+   \\&= \sum_{i=1}^n(y - p_i) y (1 - y)x_j
+   \\&= \sum_{i=1}^n(h_{output}(x_j) - p_i) h_{output}(x_j) (1 - h_{output}(x_j))x_j 
    
+   \end{aligned}
+   $$
 
-4. 计算误差值
-   $$
-   E = \frac{1}{2}\sum_{a=1}^n(h_o(x) - p_a)^2
-   $$
-   
-
-5. 对误差公式进行求偏导
-   $$
-   \frac{\partial E}{\partial w_i} = (h_o(x)-p_a)*(h_o(x)*(1-h_o(x))*f_o(x)*(1-f_o(x))*w_i
-   $$
-   
-
-6. 更新权重
+5. 更新权重， η为学习率
 
 $$
-\vartriangle w = -\eta\frac{\partial E}{\partial w_i}
-$$
-
-$$
-
+\vartriangle w^a_{ij} = -\eta\frac{\partial E}{\partial w^a_{ij}}
 $$
 
