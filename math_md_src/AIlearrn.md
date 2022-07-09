@@ -6,7 +6,23 @@
 
 3、反向传播
 
-# 一、梯度下降算法
+# 第一部分 数学基础
+
+## 第一章 线性代数
+
+1. 矩阵计算行与列的关系公式，左矩阵列***n***要等于右矩阵行***n***，得到结果矩阵的行列数为A的行***m***，B的列***p***
+   $$
+   A_(m,n)B_(n,p) = C_(m,p)
+   $$
+   
+
+2. pass
+
+
+
+# 第二部分 AI基础
+
+## 第一章、梯度下降算法
 
 #### 			梯度下降法时一种深度学习优化算法
 
@@ -49,3 +65,48 @@ $$
 ​		（3）梯度爆炸
 
 <img src="C:\Users\jjc\PycharmProjects\MathFuncExercise\math_src\gradient_explosion.png" alt="gradient_explosion" style="zoom:50%;" />
+
+## 第二章、反向传播算法数学推导
+
+#### 多元函数表达式
+
+1. 输入层 a代表单个神经元编号，n代表输入神经元个数
+   $$
+   f(x) = w*x  + b
+   $$
+   
+
+2. 输入层计算输出值 fo(x)作为隐藏层的输入
+   $$
+   f_o(x) = sigmod(f(x))
+   $$
+   
+
+3. 计算隐藏层输出
+   $$
+   h_o(x) = sigmod(w*f_o(x)+b)
+   $$
+   
+
+4. 计算误差值
+   $$
+   E = \frac{1}{2}\sum_{a=1}^n(h_o(x) - p_a)^2
+   $$
+   
+
+5. 对误差公式进行求偏导
+   $$
+   \frac{\partial E}{\partial w_i} = (h_o(x)-p_a)*(h_o(x)*(1-h_o(x))*f_o(x)*(1-f_o(x))*w_i
+   $$
+   
+
+6. 更新权重
+
+$$
+\vartriangle w = -\eta\frac{\partial E}{\partial w_i}
+$$
+
+$$
+
+$$
+
